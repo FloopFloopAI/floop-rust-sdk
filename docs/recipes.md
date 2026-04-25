@@ -110,25 +110,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-**Early abort via shared state.** The handler returns `Result<(), FloopError>`, but the `FloopError` constructor is `pub(crate)` — only the SDK can build one. So sentinel-error returns from your handler aren't possible today. Use shared state captured in the closure to signal "stop" instead, and let the loop run to completion:
+**Early abort.** Return a sentinel `FloopError` from the handler. The SDK propagates it verbatim, so callers can tell their own sentinel apart from the SDK's terminal errors. Use `FloopErrorCode::Other(...)` for caller-defined codes the SDK doesn't have a dedicated variant for:
 
 ```rust
-use std::cell::Cell;
-let seen_enough = Cell::new(false);
+use floopfloop::{FloopError, FloopErrorCode};
+
 let result = client.projects().stream("recipe-blog", None, |ev| {
     if let Some(p) = ev.progress {
         if p >= 50.0 {
-            seen_enough.set(true);
+            return Err(FloopError::new(
+                FloopErrorCode::Other("ENOUGH_PROGRESS".into()),
+                0,
+                "saw enough progress, stopping early",
+            ));
         }
     }
     Ok(())
 }).await;
-if seen_enough.get() {
-    // act on the early signal
+
+// Caller distinguishes its own sentinel from the SDK's terminal errors
+// by matching on the Other("...") string with the same payload.
+match result {
+    Err(e) if e.code.as_str() == "ENOUGH_PROGRESS" => println!("early exit"),
+    Err(e) if matches!(e.code, FloopErrorCode::BuildFailed) => eprintln!("build failed"),
+    Err(e) => return Err(e.into()),
+    Ok(()) => println!("reached live"),
 }
 ```
 
-This is a known papercut — there's an open question about exposing a public `FloopError::new` so handlers can short-circuit cleanly.
+`FloopError::new` was `pub(crate)` in 0.1.0-alpha.1 and the cookbook recommended a `Cell<T>` shared-state workaround. As of 0.1.0-alpha.2 the constructor is public, plus there are `with_request_id` and `with_retry_after` builders if you need to fill in those fields too.
 
 ---
 
