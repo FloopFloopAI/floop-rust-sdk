@@ -109,6 +109,8 @@ Known codes: `Unauthorized`, `Forbidden`, `ValidationError`, `RateLimited`, `Not
 
 Method-for-method parity with `@floopfloop/sdk` (Node), `floopfloop` (Python), and `floop-go-sdk` (Go).
 
+For longer end-to-end patterns — streaming a build, refining mid-deploy, attachment uploads, key rotation, retry-with-backoff — see the [cookbook](docs/recipes.md).
+
 ## Configuration
 
 ```rust
