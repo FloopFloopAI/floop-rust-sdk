@@ -4,6 +4,27 @@ All notable changes to `floopfloop` (Rust SDK) are documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This crate follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-alpha.2] — 2026-04-25
+
+### Added
+- `FloopError::new(code, status, message)` is now `pub` (was `pub(crate)`).
+  Callers can construct sentinel errors to short-circuit
+  `projects().stream()` handlers — return `Err(FloopError::new(...))` from
+  the closure to stop polling early without the previous `Cell<T>`
+  workaround the cookbook had to recommend.
+- `FloopError::with_request_id(id)` and `FloopError::with_retry_after(d)`
+  builder-style setters for fully populating an externally-constructed
+  `FloopError` (e.g. when forwarding upstream-service errors).
+- `docs/recipes.md` cookbook — six end-to-end Rust recipes that mirror
+  the same set of patterns shipped in the Node, Python, Go, Ruby, and
+  PHP SDKs.
+
+### Changed
+- Cookbook recipe 2 ("Watch a build progress in real time") now uses
+  the supported `Err(FloopError::new(...))` pattern for early-abort
+  instead of the `Cell<bool>` shared-state workaround that was needed
+  while `new` was crate-private.
+
 ## [0.1.0-alpha.1] — 2026-04-24
 
 ### Added

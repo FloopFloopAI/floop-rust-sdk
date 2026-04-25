@@ -109,7 +109,23 @@ impl std::fmt::Display for FloopError {
 }
 
 impl FloopError {
-    pub(crate) fn new(code: FloopErrorCode, status: u16, message: impl Into<String>) -> Self {
+    /// Construct a `FloopError`. Useful for caller-side patterns like
+    /// returning a sentinel error from a `projects().stream()` handler
+    /// to short-circuit polling.
+    ///
+    /// For "unknown" / caller-defined codes the SDK doesn't have a
+    /// dedicated variant for, use [`FloopErrorCode::Other`]:
+    ///
+    /// ```
+    /// use floopfloop::{FloopError, FloopErrorCode};
+    /// let err = FloopError::new(
+    ///     FloopErrorCode::Other("ENOUGH_PROGRESS".into()),
+    ///     0,
+    ///     "saw enough progress, stopping early",
+    /// );
+    /// assert_eq!(err.code.as_str(), "ENOUGH_PROGRESS");
+    /// ```
+    pub fn new(code: FloopErrorCode, status: u16, message: impl Into<String>) -> Self {
         Self {
             code,
             status,
@@ -117,6 +133,21 @@ impl FloopError {
             request_id: None,
             retry_after: None,
         }
+    }
+
+    /// Attach a request id (e.g. forwarded from an upstream service)
+    /// to a `FloopError`. Returns the error so it can be chained:
+    /// `FloopError::new(...).with_request_id("req_xyz")`.
+    pub fn with_request_id(mut self, id: impl Into<String>) -> Self {
+        self.request_id = Some(id.into());
+        self
+    }
+
+    /// Attach a `Retry-After` duration to a `FloopError`. Mostly useful
+    /// when a caller is producing a synthetic `RateLimited` error.
+    pub fn with_retry_after(mut self, d: Duration) -> Self {
+        self.retry_after = Some(d);
+        self
     }
 }
 

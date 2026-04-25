@@ -69,7 +69,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 /// Library semver, kept in sync with the latest `v*` git tag.
-pub const VERSION: &str = "0.1.0-alpha.1";
+pub const VERSION: &str = "0.1.0-alpha.2";
 
 const DEFAULT_BASE_URL: &str = "https://www.floopfloop.com";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
