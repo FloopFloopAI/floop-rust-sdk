@@ -348,7 +348,12 @@ impl<'c> Projects<'c> {
             }
 
             match ev.status.as_str() {
-                "live" => return Ok(()),
+                // `live` and `archived` are both terminal-success states.
+                // The Node, Python, Swift, and Kotlin SDKs already group
+                // them; Rust previously only matched `live`, so an archived
+                // project mid-stream caused max_wait timeouts instead of
+                // clean returns.
+                "live" | "archived" => return Ok(()),
                 "failed" => {
                     return Err(FloopError::new(
                         FloopErrorCode::BuildFailed,

@@ -4,6 +4,24 @@ All notable changes to `floopfloop` (Rust SDK) are documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This crate follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-alpha.3] — 2026-04-26
+
+### Fixed
+- **`Projects::stream` and `Projects::wait_for_live` looped until
+  `max_wait` when a project entered the `archived` state mid-stream.**
+  The `match ev.status.as_str()` only handled `"live"` / `"failed"` /
+  `"cancelled"`; `"archived"` fell into the default arm and polling
+  continued. Now `"live" | "archived" => return Ok(())` — matches
+  Node, Python, Swift, and Kotlin which already treat archived as a
+  non-error terminal. Same drift fixed in alpha.5 of floop-go-sdk,
+  alpha.2 of floop-ruby-sdk, and alpha.3 of floop-php-sdk on the same
+  day.
+- New `stream_archived_terminates_cleanly_like_live` integration test
+  using `wiremock` to lock in the regression.
+
+### Changed
+- `Cargo.toml` `version` bumped to `0.1.0-alpha.3`.
+
 ## [0.1.0-alpha.2] — 2026-04-25
 
 ### Added
