@@ -357,6 +357,34 @@ The outer `timeout` aborts the in-flight retry sleep cleanly because `tokio::tim
 
 ---
 
+## 7. Make a small change without a full rebuild (`code_edit_only`)
+
+Default `refine` runs the full 6-step pipeline — replan, regenerate, redeploy. For a copy edit, a colour swap, or a typo fix that doesn't need a redesign, set `code_edit_only: Some(true)`. The backend cuts to a 3-step in-place patch and deducts the cheaper code-edit credit cost (roughly half a refinement).
+
+Only meaningful once the project has reached `live` at least once — on a project that hasn't deployed yet, the flag is ignored and you get a normal initial build.
+
+```rust
+use floopfloop::{Client, RefineInput};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new(std::env::var("FLOOP_API_KEY")?)?;
+
+    client.projects().refine("recipe-blog", RefineInput {
+        message: "Change the hero headline from 'Welcome' to 'Hello there.'".into(),
+        code_edit_only: Some(true),
+        ..Default::default()
+    }).await?;
+
+    client.projects().wait_for_live("recipe-blog", None).await?;
+    Ok(())
+}
+```
+
+If the change actually needs a redesign or a new dependency, prefer a plain `refine` — `code_edit_only` is for surface-level edits only. The backend won't promote a code-edit into a full refinement automatically; it just runs the 3-step patch with the limited tools it has, and you may end up paying for a second `refine` to redo the change properly.
+
+---
+
 ## Got a pattern worth adding?
 
 Open an issue at [FloopFloopAI/floop-rust-sdk/issues](https://github.com/FloopFloopAI/floop-rust-sdk/issues) describing the use case. Recipes live in this file, not in `src/`, so they're easy to update without an SDK release.
