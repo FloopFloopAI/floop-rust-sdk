@@ -326,6 +326,35 @@ async fn stream_failed_returns_typed_error() {
     assert_eq!(err.message, "typecheck failed");
 }
 
+#[tokio::test]
+async fn stream_archived_terminates_cleanly_like_live() {
+    // Pre-fix this looped until max_wait because the match arm only
+    // covered live/failed/cancelled. Node/Python/Swift/Kotlin already
+    // treat archived as a non-error terminal; Rust now matches.
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/api/v1/projects/p_1/status"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            r#"{"data":{"step":3,"totalSteps":3,"status":"archived","message":""}}"#,
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+    let client = client_for(&server);
+    client
+        .projects()
+        .stream(
+            "p_1",
+            Some(StreamOptions {
+                interval: Duration::from_millis(5),
+                max_wait: Duration::from_secs(5),
+            }),
+            |_| Ok(()),
+        )
+        .await
+        .expect("archived should be a clean terminal, not a max_wait timeout");
+}
+
 // ── secrets ─────────────────────────────────────────────────────────
 
 #[tokio::test]
