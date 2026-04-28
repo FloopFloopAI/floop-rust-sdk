@@ -43,6 +43,7 @@ mod library;
 mod projects;
 mod secrets;
 mod subdomains;
+mod subscriptions;
 mod uploads;
 mod usage;
 mod user;
@@ -59,6 +60,9 @@ pub use projects::{
 };
 pub use secrets::{SecretSummary, Secrets};
 pub use subdomains::{SubdomainCheckResult, SubdomainSuggestResult, Subdomains};
+pub use subscriptions::{
+    CurrentSubscription, SubscriptionCredits, SubscriptionPlan, Subscriptions,
+};
 pub use uploads::{CreateUploadInput, UploadedAttachment, Uploads, MAX_UPLOAD_BYTES};
 pub use usage::{Usage, UsageSummary};
 pub use user::{User, UserApi};
@@ -69,7 +73,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 /// Library semver, kept in sync with the latest `v*` git tag.
-pub const VERSION: &str = "0.1.0-alpha.2";
+pub const VERSION: &str = "0.1.0-alpha.4";
 
 const DEFAULT_BASE_URL: &str = "https://www.floopfloop.com";
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
@@ -139,6 +143,9 @@ impl Client {
     }
     pub fn usage(&self) -> Usage<'_> {
         Usage { client: self }
+    }
+    pub fn subscriptions(&self) -> Subscriptions<'_> {
+        Subscriptions { client: self }
     }
     pub fn api_keys(&self) -> ApiKeys<'_> {
         ApiKeys { client: self }

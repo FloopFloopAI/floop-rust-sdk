@@ -499,6 +499,75 @@ async fn usage_summary() {
     assert_eq!(out.current_period.builds_used, 12);
 }
 
+// ── subscriptions ──────────────────────────────────────────────────
+
+#[tokio::test]
+async fn subscriptions_current_populated() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/api/v1/subscriptions/current"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "data": {
+                "subscription": {
+                    "status": "active",
+                    "billingPeriod": "monthly",
+                    "currentPeriodStart": "2026-04-01T00:00:00Z",
+                    "currentPeriodEnd": "2026-05-01T00:00:00Z",
+                    "canceledAt": null,
+                    "planName": "pro",
+                    "planDisplayName": "Pro",
+                    "priceMonthly": 29,
+                    "priceAnnual": 290,
+                    "monthlyCredits": 500,
+                    "maxProjects": 50,
+                    "maxStorageMb": 5000,
+                    "maxBandwidthMb": 50000,
+                    "creditRolloverMonths": 1,
+                    "features": {"teams": true}
+                },
+                "credits": {
+                    "current": 423,
+                    "rolledOver": 50,
+                    "total": 473,
+                    "rolloverExpiresAt": "2026-05-01T00:00:00Z",
+                    "lifetimeUsed": 1234
+                }
+            }
+        })))
+        .mount(&server)
+        .await;
+    let client = client_for(&server);
+    let out = client.subscriptions().current().await.unwrap();
+    let sub = out.subscription.as_ref().expect("subscription populated");
+    assert_eq!(sub.plan_name, "pro");
+    assert_eq!(sub.monthly_credits, 500);
+    assert_eq!(sub.billing_period.as_deref(), Some("monthly"));
+    assert!(sub.canceled_at.is_none());
+    let credits = out.credits.as_ref().expect("credits populated");
+    assert_eq!(credits.total, 473);
+    assert_eq!(
+        credits.rollover_expires_at.as_deref(),
+        Some("2026-05-01T00:00:00Z")
+    );
+}
+
+#[tokio::test]
+async fn subscriptions_current_both_null() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/api/v1/subscriptions/current"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(
+            r#"{"data":{"subscription":null,"credits":null}}"#,
+            "application/json",
+        ))
+        .mount(&server)
+        .await;
+    let client = client_for(&server);
+    let out = client.subscriptions().current().await.unwrap();
+    assert!(out.subscription.is_none());
+    assert!(out.credits.is_none());
+}
+
 // ── api keys ────────────────────────────────────────────────────────
 
 #[tokio::test]

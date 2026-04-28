@@ -4,6 +4,37 @@ All notable changes to `floopfloop` (Rust SDK) are documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This crate follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-alpha.4] — 2026-04-28
+
+### Added
+- **`client.subscriptions().current()`** — new resource accessor that wraps
+  `GET /api/v1/subscriptions/current` and returns the authenticated user's
+  plan + credit-balance snapshot. Distinct from `usage().summary()` —
+  `usage().summary()` covers current-period consumption (credits remaining,
+  builds used, storage), while `subscriptions().current()` returns the plan
+  tier itself (price, billing period, cancel state). They overlap on
+  `monthly_credits` and `max_projects` but serve different audiences ("am I
+  about to hit my limits?" vs "what plan am I on, and when does it
+  renew?").
+- New types `CurrentSubscription`, `SubscriptionPlan`, `SubscriptionCredits`
+  re-exported from the crate root. Both `subscription` and `credits` on
+  `CurrentSubscription` are `Option<...>` and can be `None` independently —
+  a user may exist without a subscription (mid-signup, cancelled with no
+  grace credits).
+
+### Changed
+- `VERSION` constant in `src/lib.rs` bumped to `0.1.0-alpha.4` (was lagging
+  behind `Cargo.toml` at `0.1.0-alpha.2` — both sources now match the
+  release tag, satisfying the version-verify step in the release workflow).
+
+### Tests
+- Two new cases in `tests/integration.rs` covering the populated-response
+  shape and the both-null edge case.
+
+### Notes
+- Mirrors [`@floopfloop/sdk` PR #6](https://github.com/FloopFloopAI/floop-node-sdk/pull/6)
+  (Node `0.1.0-alpha.3`) — cross-SDK parity drop.
+
 ## [0.1.0-alpha.3] — 2026-04-26
 
 ### Fixed
