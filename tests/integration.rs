@@ -545,7 +545,10 @@ async fn subscriptions_current_populated() {
     assert!(sub.canceled_at.is_none());
     let credits = out.credits.as_ref().expect("credits populated");
     assert_eq!(credits.total, 473);
-    assert_eq!(credits.rollover_expires_at.as_deref(), Some("2026-05-01T00:00:00Z"));
+    assert_eq!(
+        credits.rollover_expires_at.as_deref(),
+        Some("2026-05-01T00:00:00Z")
+    );
 }
 
 #[tokio::test]
