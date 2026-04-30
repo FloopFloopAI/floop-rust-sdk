@@ -23,6 +23,8 @@ pub enum FloopErrorCode {
     Timeout,
     BuildFailed,
     BuildCancelled,
+    InsufficientCredits,
+    PaymentFailed,
     Unknown,
     /// Any server code the SDK doesn't have a dedicated variant for.
     Other(String),
@@ -45,6 +47,8 @@ impl FloopErrorCode {
             Self::Timeout => "TIMEOUT",
             Self::BuildFailed => "BUILD_FAILED",
             Self::BuildCancelled => "BUILD_CANCELLED",
+            Self::InsufficientCredits => "INSUFFICIENT_CREDITS",
+            Self::PaymentFailed => "PAYMENT_FAILED",
             Self::Unknown => "UNKNOWN",
             Self::Other(s) => s,
         }
@@ -64,6 +68,8 @@ impl FloopErrorCode {
             "TIMEOUT" => Self::Timeout,
             "BUILD_FAILED" => Self::BuildFailed,
             "BUILD_CANCELLED" => Self::BuildCancelled,
+            "INSUFFICIENT_CREDITS" => Self::InsufficientCredits,
+            "PAYMENT_FAILED" => Self::PaymentFailed,
             "UNKNOWN" => Self::Unknown,
             other => Self::Other(other.to_owned()),
         }
